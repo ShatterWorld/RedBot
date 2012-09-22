@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import os, sys, math
 
 def recruitSoldier ():
@@ -117,7 +117,8 @@ def backupInvestigationFile ():
 player = {}
 player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
 
-if (report = readFile('obrana.txt')):
+report = readFile('obrana.txt')
+if report:
 	if (not report['ztraty_ja_uzemi']):
 		attack(report['utocnici'].split(',').pop())
 elif isHungry():
