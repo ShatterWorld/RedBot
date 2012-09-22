@@ -69,7 +69,7 @@ if isHungry():
 	#if !attack():
 
 	harvest()
-else if (getProduction() / (player['soldiers'] + player['farmers']) < 3):
+elif (getProduction() / (player['soldiers'] + player['farmers']) < 3):
 	increaseProduction()
 else:
 	increaseArmyPower()
