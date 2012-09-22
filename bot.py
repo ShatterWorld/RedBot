@@ -20,21 +20,24 @@ def harvest ():
 	print('s')
 
 def attack (target = Null):
-	#if (targer == Null):
-		#if (not (target = selectTarget())):
-			#return False
+	if (targer == Null):
+		if (not (target = selectTarget())):
+			return False
 
 	soldiers = player['soldiers']
 	print ('u {0} {1}'.format(target, soldiers))
 	return True
 
 def selectTarget ():
-	if (report = readFile('obrana.txt')):
+	if (report = readFile('informace.txt')): #potřeba jiná fce!
 		#zálohovat info (maže se obsah souboru)
 		#vyhodnotit -> calculate(selectedTarget)
 		#return id nebo False
 	else:
-		investigate()
+		if (player['spyLevel'] > 0):
+			investigate()
+		else:
+			upgradeSpy()
 		return False
 
 def investigate ():
@@ -84,6 +87,8 @@ if (report = readFile('obrana.txt')):
 elif isHungry():
 	if not attack():
 		harvest()
+elif (player['soldiers'] / 3 > player['spyLevel'] + 1):
+	upgradeSpy()
 elif (getProduction() / (player['soldiers'] + player['farmers']) < 3):
 	increaseProduction()
 else:
