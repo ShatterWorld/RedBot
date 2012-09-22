@@ -60,13 +60,8 @@ def increaseProduction ():
 		recruitFarmer()
 
 def readFile (filename):
-	result = {}
 	with open(filename, 'r') as source:
-		for line in source:
-			if '=' in line:
-				key, value = line.split('=')
-				result[key] = value
-	return result
+		return {tuple(line.split('=')) for line in source if '=' in line}
 
 #======================================================================
 player = {}
