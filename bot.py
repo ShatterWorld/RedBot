@@ -37,7 +37,10 @@ def getDefensePower (player):
 def getProduction ():
 	return math.floor(player['farmers'] * (player['farmLevel'] // 3))
 
-def increaseAttackPower ():
+def getFoodTimeout ():
+	return math.floor(player['food'] / (player['soldiers'] + player['farmers']))
+
+def increaseArmyPower ():
 	if(player['soldiers'] > player['armyLevel'] / 3):
 		upgradeArmy()
 	else:
