@@ -19,12 +19,15 @@ def upgradeSpy ():
 def harvest ():
 	print('s')
 
-def attack (target = Null, soldiers = Null):
-	#selectTarget()
-	#calculate()
+def attack (target = Null):
+	#if (targer == Null):
+		#selectTarget()
+		#if !calculate():
+			#return False
 
+	soldiers = player['soldiers']
 	print ('u {0} {1}'.format(target, soldiers))
-	#return true/false
+	return True
 
 def investigate ():
 	print('i')
@@ -63,16 +66,21 @@ def readFile (filename):
 	with open(filename, 'r') as source:
 		return {tuple(line.split('=')) for line in source if '=' in line}
 
+def wasAttacked ():
+	report = readFile('obrana.txt')
+	return False if len(report) <= 0 else report 			#dá se takhle rozpoznat prázdné pole?
+
 #======================================================================
 player = {}
 player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
 
 
-#if (attacked())
-if isHungry():
-	#if !attack():
-
-	harvest()
+if (report = wasAttacked()):
+	if (report['ztraty_ja_uzemi'] <= 0):
+		attack(report['utocnici'])			#vyřešit pro víc útočníku, resp. vybrat jakéhokoli z nich
+elif isHungry():
+	if !attack():
+		harvest()
 elif (getProduction() / (player['soldiers'] + player['farmers']) < 3):
 	increaseProduction()
 else:
