@@ -32,7 +32,22 @@ def getAttackPower (soldiers, player):
 	return soldiers * (player['armyLevel'] // 3)
 
 def getDefensePower (player):
-	return math.floor(1.5 * player.soldiers * (player['armyLevel'] // 3))
+	return math.floor(1.5 * player['soldiers'] * (player['armyLevel'] // 3))
+
+def getProduction ():
+	return math.floor(player['farmers'] * (player['farmLevel'] // 3))
+
+def increaseAttackPower ():
+	if(player['soldiers'] > player['armyLevel'] / 3):
+		upgradeArmy()
+	else:
+		recruitSoldier()
+
+def increaseProduction ():
+	if(player['farmers'] > player['farmLevel'] / 3):
+		upgradeFarm()
+	else:
+		recruitFarmer()
 
 player = {}
 player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
