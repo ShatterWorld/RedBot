@@ -19,7 +19,7 @@ def upgradeSpy ():
 def harvest ():
 	print('s')
 
-def attack (target, soldiers):
+def attack (target = Null, soldiers = Null):
 	#selectTarget()
 	#calculate()
 
@@ -45,7 +45,7 @@ def getFoodTimeout ():
 	return math.floor(player['food'] / (player['soldiers'] + player['farmers']))
 
 def isHungry ():
-	return getFoodTimeout() < 3 ? true : false
+	return True if getFoodTimeout() < 3 else False
 
 def increaseArmyPower ():
 	if(player['soldiers'] > player['armyLevel'] / 3):
@@ -58,6 +58,10 @@ def increaseProduction ():
 		upgradeFarm()
 	else:
 		recruitFarmer()
+
+def readFile (filename):
+	with open(filename, 'r') as source:
+		return {tuple(line.split('=')) for line in source if '=' in line}
 
 #======================================================================
 player = {}
@@ -73,11 +77,4 @@ elif (getProduction() / (player['soldiers'] + player['farmers']) < 3):
 	increaseProduction()
 else:
 	increaseArmyPower()
-
-
-
-
-
-
-
 
