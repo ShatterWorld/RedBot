@@ -63,8 +63,9 @@ def readFile (filename):
 	result = {}
 	with open(filename, 'r') as source:
 		for line in source:
-			key, value = line.split('=')
-			result[key] = value
+			if '=' in line:
+				key, value = line.split('=')
+				result[key] = value
 	return result
 
 #======================================================================
