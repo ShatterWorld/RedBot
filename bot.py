@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 import os, sys, math
 
+# musíme ukládat poslední tah!!!
+
 def recruitSoldier ():
 	print('v')
 
@@ -44,8 +46,6 @@ def selectTarget ():
 	else:
 		if (player['spyLevel'] > 0):
 			investigate()
-		#else:
-		#	upgradeSpy()
 		return False
 
 def investigate ():
@@ -101,7 +101,7 @@ def parseInvestigationFile ():
 				return {}
 		except IOError:
 			return {}
-	with report if report else backup as source: #pokud existuje informace-old.txt a neni starší než 15 kol tak ho použij
+	with report if report else backup as source:
 		for line in source:
 			id, data = line.split(':')
 			player = {}
@@ -109,7 +109,7 @@ def parseInvestigationFile ():
 			result[id] = player
 	return result
 
-def backupInvestigationFile ():
+def backupInvestigationFile (): #nefunguje ukládání
 	with open('informace.txt', 'r') as source:
 		with open('informace.old.txt', 'w') as destination:
 			destination.write('{0}\n'.format(player['remaining'] - 15))
@@ -120,6 +120,7 @@ def backupInvestigationFile ():
 player = {}
 player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
 
+
 report = False
 try:
 	report = readFile('obrana.txt')
@@ -128,12 +129,15 @@ except IOError:
 if report:
 	if (not report['ztraty_ja_uzemi']):
 		attack(report['utocnici'].split(',').pop())
-elif isHungry():
+#elif jestli byl poslední tah úspěšný útok, útoč znova na stejného soupeře
+elif getFoodTimeout() == 3: #nebo minulé kolo bya infiltrace
 	if not attack():
 		harvest()
+elif getFoodTimeout() < 3:
+	harvest()
 elif (player['soldiers'] / 3 > player['spyLevel'] + 1):
 	upgradeSpy()
-elif ((player['soldiers'] + player['farmers']) > 0 and getProduction() / (player['soldiers'] + player['farmers']) < 3):
+elif (getProduction() < 6 or getFoodTimeout() < 4):
 	increaseProduction()
 else:
 	increaseArmyPower()
