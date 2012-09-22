@@ -59,6 +59,14 @@ def increaseProduction ():
 	else:
 		recruitFarmer()
 
+def readFile (filename):
+	result = {}
+	with open(filename, 'r') as source:
+		for line in source:
+			key, value = line.split('=')
+			result[key] = value
+	return result
+
 #======================================================================
 player = {}
 player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
