@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import sys, math
+import os, sys, math
 
 def recruitSoldier ():
 	print('v')
@@ -19,9 +19,10 @@ def upgradeSpy ():
 def harvest ():
 	print('s')
 
-def attack (target = Null):
-	if (targer == Null):
-		if (not (target = selectTarget())):
+def attack (target = None):
+	if (target is None):
+		target = selectTarget()
+		if (not target):
 			return False
 
 	soldiers = player['soldiers']
@@ -29,7 +30,8 @@ def attack (target = Null):
 	return True
 
 def selectTarget ():
-	if (report = readFile('informace.txt')): #potřeba jiná fce!
+	report = parseInvestigationFile()
+	if (report):
 		#zálohovat info (maže se obsah souboru)
 		#vyhodnotit -> calculate(selectedTarget)
 		#return id nebo False
@@ -59,16 +61,16 @@ def getFoodTimeout ():
 	return math.floor(player['food'] / (player['soldiers'] + player['farmers']))
 
 def isHungry ():
-	return True if getFoodTimeout() < 3 else False
+	return getFoodTimeout() < 3
 
 def increaseArmyPower ():
-	if(player['soldiers'] > player['armyLevel'] / 3):
+	if player['soldiers'] > (player['armyLevel'] / 3):
 		upgradeArmy()
 	else:
 		recruitSoldier()
 
 def increaseProduction ():
-	if(player['farmers'] > player['farmLevel'] / 3):
+	if player['farmers'] > (player['farmLevel'] / 3):
 		upgradeFarm()
 	else:
 		recruitFarmer()
@@ -77,13 +79,23 @@ def readFile (filename):
 	with open(filename, 'r') as source:
 		return {tuple(line.split('=')) for line in source if '=' in line}
 
+def parseInvestigationFile ():
+	result = {}
+	with open('informace.txt', 'r') as source:
+		for line in source:
+			id, data = line.split(':')
+			player = {}
+			player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = data.strip().split(' ')
+			result[id] = player
+	return result
+
 #======================================================================
 player = {}
 player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
 
 if (report = readFile('obrana.txt')):
-	if (report['ztraty_ja_uzemi'] <= 0):
-		attack(report['utocnici'])			#vyřešit pro víc útočníku, resp. vybrat jakéhokoli z nich
+	if (not report['ztraty_ja_uzemi']):
+		attack(report['utocnici'].split(',').pop())			
 elif isHungry():
 	if not attack():
 		harvest()
