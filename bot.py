@@ -44,8 +44,8 @@ def selectTarget ():
 	else:
 		if (player['spyLevel'] > 0):
 			investigate()
-		else:
-			upgradeSpy()
+		#else:
+		#	upgradeSpy()
 		return False
 
 def investigate ():
@@ -64,7 +64,10 @@ def getProduction ():
 	return math.floor(player['farmers'] * (player['farmLevel'] // 3))
 
 def getFoodTimeout ():
-	return math.floor(player['food'] / (player['soldiers'] + player['farmers']))
+	if (player['soldiers'] + player['farmers'] <= 0):
+		return 100
+	else:
+		return math.floor(player['food'] / (player['soldiers'] + player['farmers']))
 
 def isHungry ():
 	return getFoodTimeout() < 3
@@ -117,7 +120,11 @@ def backupInvestigationFile ():
 player = {}
 player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
 
-report = readFile('obrana.txt')
+report = False
+try:
+	report = readFile('obrana.txt')
+except IOError:
+	pass
 if report:
 	if (not report['ztraty_ja_uzemi']):
 		attack(report['utocnici'].split(',').pop())
@@ -126,7 +133,7 @@ elif isHungry():
 		harvest()
 elif (player['soldiers'] / 3 > player['spyLevel'] + 1):
 	upgradeSpy()
-elif (getProduction() / (player['soldiers'] + player['farmers']) < 3):
+elif ((player['soldiers'] + player['farmers']) > 0 and getProduction() / (player['soldiers'] + player['farmers']) < 3):
 	increaseProduction()
 else:
 	increaseArmyPower()
