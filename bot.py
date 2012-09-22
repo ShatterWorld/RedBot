@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import os, sys, math
+import os, sys, math, shutil
 
 def recruitSoldier ():
 	print('v')
@@ -32,9 +32,14 @@ def attack (target = None):
 def selectTarget ():
 	report = parseInvestigationFile()
 	if (report):
-		#zálohovat info (maže se obsah souboru)
-		#vyhodnotit -> calculate(selectedTarget)
-		#return id nebo False
+		target = Null
+		targetMinPower = Null
+		for id in report:
+			enemyDefPower = id['soldiers'] * id['armyLevel'] * 1.5
+			if (enemyDefPower < getAttackPower() && (target == Null || enemyDefPower < targetMinPower)):
+				target = id
+				targetMinPower = enemyDefPower
+		return target if target != Null else False
 	else:
 		if (player['spyLevel'] > 0):
 			investigate()
@@ -81,12 +86,13 @@ def readFile (filename):
 
 def parseInvestigationFile ():
 	result = {}
-	with open('informace.txt', 'r') as source:
+	with open('informace.txt', 'r') as source: #pokud existuje informace-old.txt a neni starší než 15 kol tak ho použij
 		for line in source:
 			id, data = line.split(':')
 			player = {}
 			player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = data.strip().split(' ')
 			result[id] = player
+	shutil.copy('informace.txt', 'informace-old.txt')
 	return result
 
 #======================================================================
@@ -95,7 +101,7 @@ player['remaining'], player['land'], player['soldiers'], player['farmers'], play
 
 if (report = readFile('obrana.txt')):
 	if (not report['ztraty_ja_uzemi']):
-		attack(report['utocnici'].split(',').pop())			
+		attack(report['utocnici'].split(',').pop())
 elif isHungry():
 	if not attack():
 		harvest()
