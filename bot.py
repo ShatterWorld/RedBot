@@ -36,7 +36,8 @@ def selectTarget ():
 		targetMinPower = None
 		for id in report:
 			enemyDefPower = id['soldiers'] * id['armyLevel'] * 1.5
-			if (enemyDefPower < getAttackPower() && (target is None || enemyDefPower < targetMinPower)):
+			if (enemyDefPower < getAttackPower() and (target is None or enemyDefPower < targetMinPower)):
+
 				target = id
 				targetMinPower = enemyDefPower
 		return target if target else False
