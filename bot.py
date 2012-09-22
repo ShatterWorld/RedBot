@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import os, sys, math, shutil
+import os, sys, math
 
 def recruitSoldier ():
 	print('v')
@@ -32,14 +32,14 @@ def attack (target = None):
 def selectTarget ():
 	report = parseInvestigationFile()
 	if (report):
-		target = Null
-		targetMinPower = Null
+		target = None
+		targetMinPower = None
 		for id in report:
 			enemyDefPower = id['soldiers'] * id['armyLevel'] * 1.5
-			if (enemyDefPower < getAttackPower() && (target == Null || enemyDefPower < targetMinPower)):
+			if (enemyDefPower < getAttackPower() && (target is None || enemyDefPower < targetMinPower)):
 				target = id
 				targetMinPower = enemyDefPower
-		return target if target != Null else False
+		return target if target else False
 	else:
 		if (player['spyLevel'] > 0):
 			investigate()
@@ -86,14 +86,31 @@ def readFile (filename):
 
 def parseInvestigationFile ():
 	result = {}
-	with open('informace.txt', 'r') as source: #pokud existuje informace-old.txt a neni starší než 15 kol tak ho použij
+	report = None
+	try:
+		report = open('informace.txt', 'r')
+		backupInvestigationFile()
+	except IOError:
+		try:
+			backup = open('informace.old.txt', 'r')
+			if (int(next(backup)) > player['remaining']):
+				return {}
+		except IOError:
+			return {}
+	with report if report else backup as source: #pokud existuje informace-old.txt a neni starší než 15 kol tak ho použij
 		for line in source:
 			id, data = line.split(':')
 			player = {}
 			player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = data.strip().split(' ')
 			result[id] = player
-	shutil.copy('informace.txt', 'informace-old.txt')
 	return result
+
+def backupInvestigationFile ():
+	with open('informace.txt', 'r') as source:
+		with open('informace.old.txt', 'w') as destination:
+			destination.write('{0}\n'.format(player['remaining'] - 15))
+			destination.write(source.read)
+	os.remove('informace.txt')
 
 #======================================================================
 player = {}
