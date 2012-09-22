@@ -20,7 +20,11 @@ def harvest ():
 	print('s')
 
 def attack (target, soldiers):
+	#selectTarget()
+	#calculate()
+
 	print ('u {0} {1}'.format(target, soldiers))
+	#return true/false
 
 def investigate ():
 	print('i')
@@ -40,6 +44,9 @@ def getProduction ():
 def getFoodTimeout ():
 	return math.floor(player['food'] / (player['soldiers'] + player['farmers']))
 
+def isHungry ():
+	return getFoodTimeout() < 3 ? true : false
+
 def increaseArmyPower ():
 	if(player['soldiers'] > player['armyLevel'] / 3):
 		upgradeArmy()
@@ -52,6 +59,25 @@ def increaseProduction ():
 	else:
 		recruitFarmer()
 
+#======================================================================
 player = {}
 player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
+
+
+#if (attacked())
+if isHungry():
+	#if !attack():
+
+	harvest()
+else if (getProduction() / (player['soldiers'] + player['farmers']) < 3):
+	increaseProduction()
+else:
+	increaseArmyPower()
+
+
+
+
+
+
+
 
