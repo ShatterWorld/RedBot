@@ -49,6 +49,12 @@ def selectTarget ():
 		return False
 
 def investigate ():
+	with open('last-round.txt', 'w') as destination: #nefunguje ukládání
+			destination.write('i')
+
+	f = open('last-round.txt', 'w') # ani tohle? ale syntax err to nehází
+	f.write('i')
+
 	print('i')
 
 def steal (target):
