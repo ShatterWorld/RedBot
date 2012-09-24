@@ -4,22 +4,22 @@ import os, sys, math
 # musíme ukládat poslední tah!!!
 
 def recruitSoldier ():
-	print('v')
+	nextRound('v')
 
 def recruitFarmer ():
-	print('r')
+	nextRound('r')
 
 def upgradeArmy ():
-	print('z')
+	nextRound('z')
 
 def upgradeFarm ():
-	print('f')
+	nextRound('f')
 
 def upgradeSpy ():
-	print('t')
+	nextRound('t')
 
 def harvest ():
-	print('s')
+	nextRound('s')
 
 def attack (target = None):
 	if (target is None):
@@ -28,7 +28,7 @@ def attack (target = None):
 			return False
 
 	soldiers = player['soldiers']
-	print ('u {0} {1}'.format(target, soldiers))
+	nextRound ('u {0} {1}'.format(target, soldiers))
 	return True
 
 def selectTarget ():
@@ -49,16 +49,10 @@ def selectTarget ():
 		return False
 
 def investigate ():
-	with open('last-round.txt', 'w') as destination: #nefunguje ukládání
-			destination.write('i')
-
-	f = open('last-round.txt', 'w') # ani tohle? ale syntax err to nehází
-	f.write('i')
-
-	print('i')
+	nextRound('i')
 
 def steal (target):
-	print('l {0}'.format(target))
+	nextRound('l {0}'.format(target))
 
 def getAttackPower (soldiers, player):
 	return soldiers * (player['armyLevel'] // 3)
@@ -121,6 +115,11 @@ def backupInvestigationFile (): #nefunguje ukládání
 			destination.write('{0}\n'.format(player['remaining'] - 15))
 			destination.write(source.read)
 	os.remove('informace.txt')
+
+def nextRound (action):
+	with open('last-round.txt', 'w') as target:
+		target.write(action)
+	print(action)
 
 #======================================================================
 player = {}
