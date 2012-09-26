@@ -83,8 +83,11 @@ def increaseProduction ():
 		recruitFarmer()
 
 def readFile (filename):
-	with open(filename, 'r') as source:
-		return {tuple(line.split('=')) for line in source if '=' in line}
+	try:
+		with open(filename, 'r') as source:
+			return {tuple(line.split('=')) for line in source if '=' in line}
+	except IOError:
+		return False
 
 def parseInvestigationFile ():
 	result = {}
@@ -120,34 +123,23 @@ def nextRound (action):
 	print(action)
 
 def getLastRound ():
-	with open('last-round.txt', 'r') as source:
-		return source.read()
+	try:
+		with open('last-round.txt', 'r') as source:
+			return source.read()
+	except IOError:
+		return False
+
 
 #======================================================================
 player = {}
 player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
 
-#----------------------------------------------------------------------
-lastRound = False
-try:
-	lastRound = getLastRound()
-except IOError:
-	pass
+lastRound = getLastRound()
 if (lastRound): #mělo by donekonečna vypisovat jednu akci, ne je střídat !!!
 	nextRound(lastRound)
-#----------------------------------------------------------------------
-defReport = False
-try:
-	defReport = readFile('obrana.txt')
-except IOError:
-	pass
-#----------------------------------------------------------------------
-attReport = False
-try:
-	attReport = readFile('utok.txt')
-except IOError:
-	pass
-#----------------------------------------------------------------------
+defReport = readFile('obrana.txt')
+attReport = readFile('utok.txt')
+
 if defReport:
 	if (not defReport['ztraty_ja_uzemi']):
 		attack(defReport['utocnici'].split(',').pop())
