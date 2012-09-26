@@ -102,9 +102,9 @@ def parseInvestigationFile ():
 	with report if report else backup as source:
 		for line in source:
 			id, data = line.split(':')
-			player = {}
-			player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = data.strip().split(' ')
-			result[id] = player
+			values = {}
+			values['land'], values['soldiers'], values['farmers'], values['armyLevel'], values['farmLevel'], values['food'], values['spyLevel'] = data.strip().split(' ')
+			result[id] = values
 	return result
 
 def backupInvestigationFile (): #nefunguje ukládání
