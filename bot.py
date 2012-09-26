@@ -107,7 +107,7 @@ def parseInvestigationFile ():
 			result[id] = values
 	return result
 
-def backupInvestigationFile (): #nefunguje ukládání
+def backupInvestigationFile ():
 	with open('informace.txt', 'r') as source:
 		with open('informace.old.txt', 'w') as destination:
 			destination.write('{0}\n'.format(player['remaining'] - 15))
@@ -119,21 +119,42 @@ def nextRound (action):
 		target.write(action)
 	print(action)
 
+def getLastRound ():
+	with open('last-round.txt', 'r') as source:
+		return source.read()
+
 #======================================================================
 player = {}
 player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
 
-
-report = False
+#----------------------------------------------------------------------
+lastRound = False
 try:
-	report = readFile('obrana.txt')
+	lastRound = getLastRound()
 except IOError:
 	pass
-if report:
-	if (not report['ztraty_ja_uzemi']):
-		attack(report['utocnici'].split(',').pop())
-#elif jestli byl poslední tah úspěšný útok, útoč znova na stejného soupeře
-elif getFoodTimeout() == 3: #nebo minulé kolo bya infiltrace
+if (lastRound): #mělo by donekonečna vypisovat jednu akci, ne je střídat !!!
+	nextRound(lastRound)
+#----------------------------------------------------------------------
+defReport = False
+try:
+	defReport = readFile('obrana.txt')
+except IOError:
+	pass
+#----------------------------------------------------------------------
+attReport = False
+try:
+	attReport = readFile('utok.txt')
+except IOError:
+	pass
+#----------------------------------------------------------------------
+if defReport:
+	if (not defReport['ztraty_ja_uzemi']):
+		attack(defReport['utocnici'].split(',').pop())
+elif attReport:
+	if (attReport['zisk_ja_uzemi'] > 0 and player['soldiers'] > 3):
+		attack(attReport['cil'])
+elif (getFoodTimeout() == 3 or lastRound == 'i'):
 	if not attack():
 		harvest()
 elif getFoodTimeout() < 3:
@@ -144,4 +165,3 @@ elif (getProduction() < 6 or getFoodTimeout() < 4):
 	increaseProduction()
 else:
 	increaseArmyPower()
-
