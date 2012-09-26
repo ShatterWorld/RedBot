@@ -118,8 +118,12 @@ def backupInvestigationFile ():
 	os.remove('informace.txt')
 
 def nextRound (action):
-	with open('last-round.txt', 'w') as target:
-		target.write(action)
+	try:
+		with open('last-round.txt', 'w') as target:
+			target.write(action)
+	except Exception:
+		print('err1') #nikdy nevypíše
+
 	print(action)
 
 def getLastRound ():
@@ -128,7 +132,6 @@ def getLastRound ():
 			return source.read()
 	except IOError:
 		return False
-
 
 #======================================================================
 player = {}
