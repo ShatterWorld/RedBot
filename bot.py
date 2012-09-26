@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 import os, sys, math
 
-# musíme ukládat poslední tah!!!
-
 def recruitSoldier ():
 	nextRound('v')
 
@@ -113,7 +111,7 @@ def backupInvestigationFile (): #nefunguje ukládání
 	with open('informace.txt', 'r') as source:
 		with open('informace.old.txt', 'w') as destination:
 			destination.write('{0}\n'.format(player['remaining'] - 15))
-			destination.write(source.read)
+			destination.write(source.read())
 	os.remove('informace.txt')
 
 def nextRound (action):
