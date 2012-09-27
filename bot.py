@@ -122,8 +122,7 @@ def nextRound (action):
 		with open('last-round.txt', 'w') as target:
 			target.write(action)
 	except Exception:
-		print('err1') #nikdy nevypíše
-
+		pass
 	print(action)
 	sys.exit(0)
 
