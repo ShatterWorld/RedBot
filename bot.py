@@ -89,7 +89,7 @@ def readFile (filename):
 	except IOError:
 		return False
 
-def parseInvestigationFile ():
+def parseInvestigationFile (): #tady to nejspíš pořád vrací false
 	result = {}
 	report = None
 	try:
