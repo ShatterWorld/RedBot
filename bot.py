@@ -125,6 +125,7 @@ def nextRound (action):
 		print('err1') #nikdy nevypíše
 
 	print(action)
+	sys.exit(0)
 
 def getLastRound ():
 	try:
@@ -138,8 +139,6 @@ player = {}
 player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
 
 lastRound = getLastRound()
-if (lastRound): #mělo by donekonečna vypisovat jednu akci, ne je střídat !!!
-	nextRound(lastRound)
 defReport = readFile('obrana.txt')
 attReport = readFile('utok.txt')
 
@@ -149,7 +148,7 @@ if defReport:
 elif attReport:
 	if (attReport['zisk_ja_uzemi'] > 0 and player['soldiers'] > 3):
 		attack(attReport['cil'])
-elif (getFoodTimeout() == 3 or lastRound == 'i'):
+elif ((getFoodTimeout() < 5 and getFoodTimeout() >= 3) or lastRound == 'i'):
 	if not attack():
 		harvest()
 elif getFoodTimeout() < 3:
