@@ -36,7 +36,7 @@ def selectTarget ():
 		targetMinPower = None
 		for id in report:
 			enemyDefPower = getDefensePower(int(report[id]['soldiers']), int(report[id]['armyLevel']))
-			if ((enemyDefPower < getAttackPower(player['soldiers'], player['armyLevel'])) and ((target is None) or (enemyDefPower < targetMinPower))):
+			if ((enemyDefPower < getAttackPower()) and ((target is None) or (enemyDefPower < targetMinPower))):
 				target = id
 				targetMinPower = enemyDefPower
 		return target if target else False
@@ -51,10 +51,16 @@ def investigate ():
 def steal (target):
 	nextRound('l {0}'.format(target))
 
-def getAttackPower (soldiers, armyLevel):
+def getAttackPower (soldiers = None, armyLevel = None):
+	if ((soldiers is None) or (armyLevel is None)):
+		soldiers = player['soldiers']
+		armyLevel = player['armyLevel']
 	return soldiers * (armyLevel // 3)
 
-def getDefensePower (soldiers, armyLevel):
+def getDefensePower (soldiers = None, armyLevel = None):
+	if ((soldiers is None) or (armyLevel is None)):
+		soldiers = player['soldiers']
+		armyLevel = player['armyLevel']
 	return math.floor(soldiers * (armyLevel // 3) * 1.5)
 
 def getProduction ():
@@ -146,14 +152,15 @@ if defReport:
 elif attReport:
 	if (attReport['zisk_ja_uzemi'] > 0 and player['soldiers'] > 3):
 		attack(attReport['cil'])
-elif ((getFoodTimeout() < 5 and getFoodTimeout() >= 3) or lastRound == 'i'):
+elif ((getFoodTimeout() < 5 and getFoodTimeout() >= 3) or lastRound == 'i'): #poštelovat
 	if not attack():
 		harvest()
 elif getFoodTimeout() < 3:
 	harvest()
-elif (player['soldiers'] / 3 > player['spyLevel'] + 1):
+elif (player['soldiers'] / 3 > player['spyLevel'] + 1): #ze začátku nikdy neproběhne -> útočíme naslepo (btw jak je to možný?)
 	upgradeSpy()
 elif (getProduction() < 6 or getFoodTimeout() < 4):
+#elif ((getProduction() < 6) or (getAttackPower() / 3 < getProduction())):
 	increaseProduction()
 else:
 	increaseArmyPower()
