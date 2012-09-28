@@ -31,11 +31,12 @@ def attack (target = None):
 
 def selectTarget ():
 	report = parseInvestigationFile()
+	print(report)
 	if (report):
 		target = None
 		targetMinPower = None
 		for id in report:
-			enemyDefPower = id['soldiers'] * id['armyLevel'] * 1.5
+			enemyDefPower = id['soldiers'] * id['armyLevel'] * 1.5 #TypeError: string indices must be integers
 			if (enemyDefPower < getAttackPower() and (target is None or enemyDefPower < targetMinPower)):
 
 				target = id
@@ -89,7 +90,7 @@ def readFile (filename):
 	except IOError:
 		return False
 
-def parseInvestigationFile (): #tady to nejspíš pořád vrací false
+def parseInvestigationFile ():
 	result = {}
 	report = None
 	try:
@@ -115,7 +116,7 @@ def backupInvestigationFile ():
 		with open('informace.old.txt', 'w') as destination:
 			destination.write('{0}\n'.format(player['remaining'] - 15))
 			destination.write(source.read())
-	os.remove('informace.txt')
+	#os.remove('informace.txt') trochu blbost si to odmazat, když to řádek potom chcem číst...
 
 def nextRound (action):
 	try:
