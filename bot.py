@@ -31,14 +31,12 @@ def attack (target = None):
 
 def selectTarget ():
 	report = parseInvestigationFile()
-	print(report)
 	if (report):
 		target = None
 		targetMinPower = None
 		for id in report:
-			enemyDefPower = id['soldiers'] * id['armyLevel'] * 1.5 #TypeError: string indices must be integers
-			if (enemyDefPower < getAttackPower() and (target is None or enemyDefPower < targetMinPower)):
-
+			enemyDefPower = getDefensePower(int(report[id]['soldiers']), int(report[id]['armyLevel']))
+			if ((enemyDefPower < getAttackPower(player['soldiers'], player['armyLevel'])) and ((target is None) or (enemyDefPower < targetMinPower))):
 				target = id
 				targetMinPower = enemyDefPower
 		return target if target else False
@@ -53,11 +51,11 @@ def investigate ():
 def steal (target):
 	nextRound('l {0}'.format(target))
 
-def getAttackPower (soldiers, player):
-	return soldiers * (player['armyLevel'] // 3)
+def getAttackPower (soldiers, armyLevel):
+	return soldiers * (armyLevel // 3)
 
-def getDefensePower (player):
-	return math.floor(1.5 * player['soldiers'] * (player['armyLevel'] // 3))
+def getDefensePower (soldiers, armyLevel):
+	return math.floor(soldiers * (armyLevel // 3) * 1.5)
 
 def getProduction ():
 	return math.floor(player['farmers'] * (player['farmLevel'] // 3))
