@@ -94,7 +94,7 @@ def readFile (filename):
 	except IOError:
 		return False
 
-def parseInvestigationFile ():
+def parseInvestigationFile (): #můžeme mít otevřený informace.txt tady i backupInvFile ??
 	result = {}
 	report = None
 	try:
@@ -120,13 +120,17 @@ def backupInvestigationFile ():
 		with open('informace.old.txt', 'w') as destination:
 			destination.write('{0}\n'.format(player['remaining'] - 15))
 			destination.write(source.read())
-	#os.remove('informace.txt') trochu blbost si to odmazat, když to řádek potom chcem číst...
+	#os.remove('informace.txt')
 
 #uloží toto a poslední kolo
 def nextRound (action):
+	last = ''
 	try:
 		with open('last-round.txt', 'r') as original:
 			last = original.read()[0]
+	except Exception:
+		pass
+	try:
 		with open('last-round.txt', 'w') as modified:
 			modified.write(action + last)
 	except Exception:
@@ -138,7 +142,7 @@ def nextRound (action):
 #vrací poslední dvě kola
 def getLastRounds ():
 	try:
-		with open('tmp.txt', 'r') as target:
+		with open('last-round.txt', 'r') as target:
 			text = target.read()
 			stack = []
 			for char in text:
@@ -154,20 +158,25 @@ player['remaining'], player['land'], player['soldiers'], player['farmers'], play
 #TODO: odlišit chování pro majoritní území (neútočit) a posledních cca 5 kol (útoky)
 
 lastRounds = getLastRounds()
-lastRound = lastRounds.pop(0)			#poslední kolo
-prelastRound = lastRounds.pop(0)		#předoslední kolo
+lastRound = 'x'
+prelastRound = 'x'
+
+if (lastRounds):
+	lastRound = lastRounds.pop(0)			#poslední kolo
+	if (lastRounds):
+		prelastRound = lastRounds.pop(0)		#předoslední kolo
 
 defReport = readFile('obrana.txt')
 attReport = readFile('utok.txt')
 
 if defReport:							#pokud mě někdo napadl a neprošel a mám pár vojáků, útočim na něj zpátky
-	if (not defReport['ztraty_ja_uzemi'] and player['soldiers'] > 3):
+	if (not defReport['ztraty_ja_uzemi'] and player['soldiers'] > 2):
 		attack(defReport['utocnici'].split(',').pop())
 elif attReport:							#pokud jsem někoho dobyl a mám pár vojáků, útočim na něj znova
-	if (attReport['zisk_ja_uzemi'] > 0 and player['soldiers'] > 3):
+	if (attReport['zisk_ja_uzemi'] > 0 and player['soldiers'] > 2):
 		attack(attReport['cil'])
 elif (lastRound == 'i'):				#pokud jsem minule špionoval
-	if (prelastRound == 'i'): 			#a předminule taky			#tohle se vyhodnocuje špatně, asi
+	if (prelastRound == 'i'): 			#a předminule taky
 		if (parseInvestigationFile()):	#a povedlo se
 			if not attack():			#zkusim útok
 				increaseArmyPower()		#jinak zbrojim
@@ -175,7 +184,7 @@ elif (lastRound == 'i'):				#pokud jsem minule špionoval
 			upgradeSpy()
 	else:								#když předminule ne, tak znova špionuju
 		investigate()
-elif (getFoodTimeout() < 5 and getFoodTimeout() >= 3): #když mám jídlo na 3-4 kola
+elif (getFoodTimeout() <= 5 and getFoodTimeout() > 3): #když mám jídlo na 4-5 kol
 	if not attack(): 					#zkusim útok
 		harvest() 						#jinak sklízim
 elif getFoodTimeout() < 3: 				#pokud mám jídlo na míň jak 3 kola, sklízim
