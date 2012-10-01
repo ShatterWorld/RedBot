@@ -97,22 +97,27 @@ def readFile (filename):
 def parseInvestigationFile (): #můžeme mít otevřený informace.txt tady i backupInvFile ??
 	result = {}
 	report = None
-	try:
-		report = open('informace.txt', 'r')
+	if (os.path.isfile('informace.txt')):
 		backupInvestigationFile()
-	except IOError:
+		with open('informace.txt') as source:
+			return getInvestigationFileContents(source)
+	else:
 		try:
-			backup = open('informace.old.txt', 'r')
-			if (int(next(backup)) > player['remaining']):
-				return {}
+			with open('informace.old.txt', 'r') as backup:
+				if (int(next(backup)) <= player['remaining']):
+					return getInvestigationFileContents(backup)
+				else:
+					return {}
 		except IOError:
 			return {}
-	with report if report else backup as source:
-		for line in source:
-			id, data = line.split(':')
-			values = {}
-			values['land'], values['soldiers'], values['farmers'], values['armyLevel'], values['farmLevel'], values['food'], values['spyLevel'] = data.strip().split(' ')
-			result[id] = values
+
+def getInvestigationFileContents (source):
+	result = {}
+	for line in source:
+		id, data = line.split(':')
+		values = {}
+		values['land'], values['soldiers'], values['farmers'], values['armyLevel'], values['farmLevel'], values['food'], values['spyLevel'] = data.strip().split(' ')
+		result[id] = value
 	return result
 
 def backupInvestigationFile ():
