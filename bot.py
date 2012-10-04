@@ -90,7 +90,7 @@ def increaseProduction ():
 def readFile (filename):
 	try:
 		with open(filename, 'r') as source:
-			return {tuple(line.split('=')) for line in source if '=' in line}
+			return dict([tuple(line.split('=')) for line in source if '=' in line])
 	except IOError:
 		return False
 
@@ -175,10 +175,10 @@ defReport = readFile('obrana.txt')
 attReport = readFile('utok.txt')
 
 if defReport:							#pokud mě někdo napadl a neprošel a mám pár vojáků, útočim na něj zpátky
-	if (not defReport['ztraty_ja_uzemi'] and player['soldiers'] > 2):
+	if (defReport['ztraty_ja_uzemi'] == 0 and player['soldiers'] > 2):
 		attack(defReport['utocnici'].split(',').pop())
 elif attReport:							#pokud jsem někoho dobyl a mám pár vojáků, útočim na něj znova
-	if (attReport['zisk_ja_uzemi'] > 0 and player['soldiers'] > 2):
+	if (int(attReport['zisk_ja_uzemi']) > 0 and int(player['soldiers']) > 2):
 		attack(attReport['cil'])
 elif (lastRound == 'i'):				#pokud jsem minule špionoval
 	if (prelastRound == 'i'): 			#a předminule taky
