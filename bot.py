@@ -117,7 +117,7 @@ def getInvestigationFileContents (source):
 		id, data = line.split(':')
 		values = {}
 		values['land'], values['soldiers'], values['farmers'], values['armyLevel'], values['farmLevel'], values['food'], values['spyLevel'] = data.strip().split(' ')
-		result[id] = value
+		result[id] = values
 	return result
 
 def backupInvestigationFile ():
@@ -182,6 +182,7 @@ elif attReport:							#pokud jsem někoho dobyl a mám pár vojáků, útočim n
 		attack(attReport['cil'])
 elif (lastRound == 'i'):				#pokud jsem minule špionoval
 	if (prelastRound == 'i'): 			#a předminule taky
+		#print(parseInvestigationFile())
 		if (parseInvestigationFile()):	#a povedlo se
 			if not attack():			#zkusim útok
 				increaseArmyPower()		#jinak zbrojim
