@@ -1,6 +1,12 @@
 #!/usr/bin/python3
 import os, sys, math
 
+class NoTargetError (Exception):
+	pass
+
+class NoReportError (Exception):
+	pass
+
 def recruitSoldier ():
 	nextRound('v')
 
@@ -20,31 +26,28 @@ def harvest ():
 	nextRound('s')
 
 def attack (target):
-	soldiers = player['soldiers']
-	nextRound('u {0} {1}'.format(target, soldiers))
+	nextRound('u {0} {1}'.format(int(target), player['soldiers']))
 
-def selectTarget ():
-	report = parseInvestigationFile()
+def selectTarget (report):
 	if (report):
 		target = None
-		targetMinPower = 0
-		for name in report:
-			enemyDefPower = getDefensePower(int(report[name]['soldiers']), int(report[name]['armyLevel']))
-			if ((enemyDefPower < getAttackPower()) and ((target is None) or (enemyDefPower < targetMinPower))):
+		targetPower = 0
+		for name, enemy in report.items():
+			enemyDefPower = getDefensePower(int(enemy['soldiers']), int(enemy['armyLevel']))
+			if enemyDefPower < getAttackPower(player['soldiers'], player['armyLevel']) and ((target is None) or (enemyDefPower < targetPower and int(enemy['land']))):
 				target = name
-				targetMinPower = enemyDefPower
-		return target if target else False
-	else:
-		if (player['spyLevel'] > 0 and lastRound(2) != 'i'):
-			investigate()
-		return False
+				targetPower = enemyDefPower
+		if not target:
+			raise NoTargetError()
+		return target
 
-def tryAttack ():
-	target = selectTarget()
-	if target:
+def optimalAttack ():
+	report = parseInvestigationFile()
+	if report:
+		target = selectTarget(report)
 		attack(target)
 	else:
-		return False
+		raise NoReportError()
 
 def investigate ():
 	nextRound('i')
@@ -52,10 +55,7 @@ def investigate ():
 def steal (target):
 	nextRound('l {0}'.format(target))
 
-def getAttackPower (soldiers = None, armyLevel = None):
-	if ((soldiers is None) or (armyLevel is None)):
-		soldiers = player['soldiers']
-		armyLevel = player['armyLevel']
+def getAttackPower (soldiers, armyLevel):
 	return soldiers * (armyLevel // 3)
 
 def getDefensePower (soldiers = None, armyLevel = None):
@@ -128,7 +128,7 @@ def backupInvestigationFile ():
 def nextRound (action):
 	with open('history.txt', 'a') as history:
 		history.write(action + '\n')
-	sys.stdout.write(action)
+	print(action)
 	sys.exit(0)
 
 #vrací poslední dvě kola
@@ -153,29 +153,35 @@ attReport = readFile('utok.txt')
 
 backupInvestigationFile()
 
-if defReport:						#pokud mě někdo napadl a neprošel a mám pár vojáků, útočim na něj zpátky
-	if (int(defReport['ztraty_ja_uzemi']) == 0 and player['soldiers'] > 2):
-		attack(defReport['utocnici'].split(',').pop())
+if getFoodTimeout() < 3: 				#pokud mám jídlo na míň jak 3 kola, sklízim
+	if lastRound() == 's':
+		increaseProduction()
+	harvest()
+
 if attReport:							#pokud jsem někoho dobyl a mám pár vojáků, útočim na něj znova
 	if (int(attReport['zisk_ja_uzemi']) > 0 and player['soldiers'] > 2):
 		attack(attReport['cil'])
+
+if defReport:						#pokud mě někdo napadl a neprošel a mám pár vojáků, útočim na něj zpátky
+	if (int(defReport['ztraty_ja_uzemi']) == 0 and player['soldiers'] > 2):
+		attack(defReport['utocnici'].split(',').pop())
+
 if (lastRound(1) == 'i'):				#pokud jsem minule špionoval
-	if (lastRound(2) == 'i'): 			#a předminule taky
-		if (parseInvestigationFile()):	#a povedlo se
-			if not tryAttack(): #zkusim útok
-				increaseArmyPower()		#jinak zbrojim
-		else:							#když se nepovedlo, uprgrade špionů
+	if (lastRound(2) == 'i'):#a předminule taky
+		try:
+			optimalAttack()
+		except NoReportError:
 			upgradeSpy()
+		except NoTargetError:
+			increaseArmyPower()
 	else:								#když předminule ne, tak znova špionuju
 		investigate()
-if (getFoodTimeout() <= 5 and getFoodTimeout() > 3): #když mám jídlo na 4-5 kol
-	if not tryAttack(): 					#zkusim útok
-		harvest() 						#jinak sklízim
-if getFoodTimeout() < 3: 				#pokud mám jídlo na míň jak 3 kola, sklízim
-	harvest()
+
 if (player['soldiers'] / 3 > player['spyLevel'] + 1): #pokud mám míň jak agenta na 3 vojáky, upgrade špionů
 	upgradeSpy()
+
 if (getProduction() < 6): 			#při malé produkci ji zvyšuju 
 	increaseProduction()
+
 #jinak zbrojim
 increaseArmyPower()
