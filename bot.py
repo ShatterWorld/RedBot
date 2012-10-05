@@ -19,30 +19,31 @@ def upgradeSpy ():
 def harvest ():
 	nextRound('s')
 
-def attack (target = None):
-	if (target is None):
-		target = selectTarget()
-		if (not target):
-			return False
-
+def attack (target):
 	soldiers = player['soldiers']
-	nextRound ('u {0} {1}'.format(target, soldiers))
-	return True
+	nextRound('u {0} {1}'.format(target, soldiers))
 
 def selectTarget ():
 	report = parseInvestigationFile()
 	if (report):
 		target = None
-		targetMinPower = None
-		for id in report:
-			enemyDefPower = getDefensePower(int(report[id]['soldiers']), int(report[id]['armyLevel']))
+		targetMinPower = 0
+		for name in report:
+			enemyDefPower = getDefensePower(int(report[name]['soldiers']), int(report[name]['armyLevel']))
 			if ((enemyDefPower < getAttackPower()) and ((target is None) or (enemyDefPower < targetMinPower))):
-				target = id
+				target = name
 				targetMinPower = enemyDefPower
 		return target if target else False
 	else:
-		if (player['spyLevel'] > 0 and prelastRound != 'i'):
+		if (player['spyLevel'] > 0 and lastRound(2) != 'i'):
 			investigate()
+		return False
+
+def tryAttack ():
+	target = selectTarget()
+	if target:
+		attack(target)
+	else:
 		return False
 
 def investigate ():
@@ -94,22 +95,18 @@ def readFile (filename):
 	except IOError:
 		return False
 
-def parseInvestigationFile (): #můžeme mít otevřený informace.txt tady i backupInvFile ??
-	result = {}
-	report = None
-	if (os.path.isfile('informace.txt')):
-		backupInvestigationFile()
-		with open('informace.txt') as source:
-			return getInvestigationFileContents(source)
-	else:
-		try:
-			with open('informace.old.txt', 'r') as backup:
-				if (int(next(backup)) <= player['remaining']):
-					return getInvestigationFileContents(backup)
-				else:
-					return {}
-		except IOError:
-			return {}
+def parseInvestigationFile ():
+	if os.path.isfile('informace.old.txt'):
+		with open('informace.old.txt', 'r') as backup:
+			if (player['remaining'] >= int(next(backup))):
+				return getInvestigationFileContents(backup)
+	return {}
+
+def checkInvestigationFile ():
+	if os.path.isfile('informace.txt'):
+		with open('informace.txt', 'r') as source:
+			return bool(list(source))
+	return False
 
 def getInvestigationFileContents (source):
 	result = {}
@@ -121,40 +118,29 @@ def getInvestigationFileContents (source):
 	return result
 
 def backupInvestigationFile ():
-	with open('informace.txt', 'r') as source:
-		with open('informace.old.txt', 'w') as destination:
-			destination.write('{0}\n'.format(player['remaining'] - 15))
-			destination.write(source.read())
-	#os.remove('informace.txt')
+	if checkInvestigationFile():
+		with open('informace.txt', 'r') as source:
+			with open('informace.old.txt', 'w') as destination:
+				destination.write('{0}\n'.format(player['remaining'] - 15))
+				destination.write(source.read())
 
 #uloží toto a poslední kolo
 def nextRound (action):
-	last = ''
-	try:
-		with open('last-round.txt', 'r') as original:
-			last = original.read()[0]
-	except Exception:
-		pass
-	try:
-		with open('last-round.txt', 'w') as modified:
-			modified.write(action + last)
-	except Exception:
-		print('err1')
-
-	print(action)
+	with open('history.txt', 'a') as history:
+		history.write(action + '\n')
+	sys.stdout.write(action)
 	sys.exit(0)
 
 #vrací poslední dvě kola
-def getLastRounds ():
-	try:
-		with open('last-round.txt', 'r') as target:
-			text = target.read()
-			stack = []
-			for char in text:
-				stack.append(char)
-			return stack
-	except Exception:
-		return False
+def getHistory ():
+	if os.path.isfile('history.txt'):
+		with open('history.txt') as source:
+			return [line for line in source if line != '\n']
+	return []
+
+def lastRound (offset = 1):
+	data = getHistory()
+	return data[-offset] if offset < len(data) else 'x'
 
 #======================================================================
 player = {}
@@ -162,42 +148,34 @@ player['remaining'], player['land'], player['soldiers'], player['farmers'], play
 
 #TODO: odlišit chování pro majoritní území (neútočit) a posledních cca 5 kol (útoky)
 
-lastRounds = getLastRounds()
-lastRound = 'x'
-prelastRound = 'x'
-
-if (lastRounds):
-	lastRound = lastRounds.pop(0)			#poslední kolo
-	if (lastRounds):
-		prelastRound = lastRounds.pop(0)		#předoslední kolo
-
 defReport = readFile('obrana.txt')
 attReport = readFile('utok.txt')
 
-if defReport:							#pokud mě někdo napadl a neprošel a mám pár vojáků, útočim na něj zpátky
-	if (defReport['ztraty_ja_uzemi'] == 0 and player['soldiers'] > 2):
+backupInvestigationFile()
+
+if defReport:						#pokud mě někdo napadl a neprošel a mám pár vojáků, útočim na něj zpátky
+	if (int(defReport['ztraty_ja_uzemi']) == 0 and player['soldiers'] > 2):
 		attack(defReport['utocnici'].split(',').pop())
-elif attReport:							#pokud jsem někoho dobyl a mám pár vojáků, útočim na něj znova
-	if (int(attReport['zisk_ja_uzemi']) > 0 and int(player['soldiers']) > 2):
+if attReport:							#pokud jsem někoho dobyl a mám pár vojáků, útočim na něj znova
+	if (int(attReport['zisk_ja_uzemi']) > 0 and player['soldiers'] > 2):
 		attack(attReport['cil'])
-elif (lastRound == 'i'):				#pokud jsem minule špionoval
-	if (prelastRound == 'i'): 			#a předminule taky
-		#print(parseInvestigationFile())
+if (lastRound(1) == 'i'):				#pokud jsem minule špionoval
+	if (lastRound(2) == 'i'): 			#a předminule taky
 		if (parseInvestigationFile()):	#a povedlo se
-			if not attack():			#zkusim útok
+			if not tryAttack(): #zkusim útok
 				increaseArmyPower()		#jinak zbrojim
 		else:							#když se nepovedlo, uprgrade špionů
 			upgradeSpy()
 	else:								#když předminule ne, tak znova špionuju
 		investigate()
-elif (getFoodTimeout() <= 5 and getFoodTimeout() > 3): #když mám jídlo na 4-5 kol
-	if not attack(): 					#zkusim útok
+if (getFoodTimeout() <= 5 and getFoodTimeout() > 3): #když mám jídlo na 4-5 kol
+	if not tryAttack(): 					#zkusim útok
 		harvest() 						#jinak sklízim
-elif getFoodTimeout() < 3: 				#pokud mám jídlo na míň jak 3 kola, sklízim
+if getFoodTimeout() < 3: 				#pokud mám jídlo na míň jak 3 kola, sklízim
 	harvest()
-elif (player['soldiers'] / 3 > player['spyLevel'] + 1): #pokud mám míň jak agenta na 3 vojáky, upgrade špionů
+if (player['soldiers'] / 3 > player['spyLevel'] + 1): #pokud mám míň jak agenta na 3 vojáky, upgrade špionů
 	upgradeSpy()
-elif (getProduction() < 6): 			#při malé produkci ji zvyšuju 
+if (getProduction() < 6): 			#při malé produkci ji zvyšuju 
 	increaseProduction()
-else: #jinak zbrojim
-	increaseArmyPower()
+#jinak zbrojim
+increaseArmyPower()
