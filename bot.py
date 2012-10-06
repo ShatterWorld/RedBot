@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import os, sys, math
+import os, sys, math, random
 
 class NoTargetError (Exception):
 	pass
@@ -7,61 +7,57 @@ class NoTargetError (Exception):
 class NoReportError (Exception):
 	pass
 
+actions = {
+	'soldier': 'v',
+	'farmer': 'r',
+	'army': 'z',
+	'farm': 'f',
+	'spy': 't',
+	'harvest': 's',
+	'attack': 'u',
+	'investigate': 'i',
+	'steal': 'l'
+}
+
+files = {
+	'investigation': 'informace.txt',
+	'investigationBackup': 'informace.old.txt',
+	'history': 'history.txt',
+	'attackReport': 'utok.txt',
+	'defenseReport': 'obrana.txt'
+}
+
 def recruitSoldier ():
-	nextRound('v')
+	nextRound(actions['soldier'])
 
 def recruitFarmer ():
-	nextRound('r')
+	nextRound(actions['farmer'])
 
 def upgradeArmy ():
-	nextRound('z')
+	nextRound(actions['army'])
 
 def upgradeFarm ():
-	nextRound('f')
+	nextRound(actions['farm'])
 
 def upgradeSpy ():
-	nextRound('t')
+	nextRound(actions['spy'])
 
 def harvest ():
-	nextRound('s')
+	nextRound(actions['harvest'])
 
 def attack (target):
-	nextRound('u {0} {1}'.format(int(target), player['soldiers']))
-
-def selectTarget (report):
-	if (report):
-		target = None
-		targetPower = 0
-		for name, enemy in report.items():
-			enemyDefPower = getDefensePower(int(enemy['soldiers']), int(enemy['armyLevel']))
-			if enemyDefPower < getAttackPower(player['soldiers'], player['armyLevel']) and ((target is None) or (enemyDefPower < targetPower and int(enemy['land']))):
-				target = name
-				targetPower = enemyDefPower
-		if not target:
-			raise NoTargetError()
-		return target
-
-def optimalAttack ():
-	report = parseInvestigationFile()
-	if report:
-		target = selectTarget(report)
-		attack(target)
-	else:
-		raise NoReportError()
+	nextRound((actions['attack'] + ' {0} {1}').format(int(target), player['soldiers']))
 
 def investigate ():
-	nextRound('i')
+	nextRound(actions['investigate'])
 
 def steal (target):
-	nextRound('l {0}'.format(target))
+	nextRound((actions['steal'] + ' {0}').format(target))
 
 def getAttackPower (soldiers, armyLevel):
 	return soldiers * (armyLevel // 3)
 
-def getDefensePower (soldiers = None, armyLevel = None):
-	if ((soldiers is None) or (armyLevel is None)):
-		soldiers = player['soldiers']
-		armyLevel = player['armyLevel']
+def getDefensePower (soldiers, armyLevel):
 	return math.floor(soldiers * (armyLevel // 3) * 1.5)
 
 def getProduction ():
@@ -88,23 +84,47 @@ def increaseProduction ():
 	else:
 		recruitFarmer()
 
+def selectOptimalTarget (report):
+	if (report):
+		target = None
+		targetPower = 0
+		for name, enemy in report.items():
+			enemyDefPower = getDefensePower(int(enemy['soldiers']), int(enemy['armyLevel']))
+			if enemyDefPower < getAttackPower(player['soldiers'], player['armyLevel']) and ((target is None) or (enemyDefPower < targetPower and int(enemy['land']))):
+				target = name
+				targetPower = enemyDefPower
+		if not target:
+			raise NoTargetError()
+		return target
+
+def selectRandomTarget ():
+	return random.randrange(1, 4)
+
+def optimalAttack ():
+	report = parseInvestigationFile()
+	if report:
+		target = selectOptimalTarget(report)
+		attack(target)
+	else:
+		raise NoReportError()
+
 def readFile (filename):
 	try:
 		with open(filename, 'r') as source:
-			return dict([tuple(line.split('=')) for line in source if '=' in line])
+			return dict([tuple(map(lambda x: x.strip(), line.split('='))) for line in source if '=' in line])
 	except IOError:
-		return False
+		return {}
 
 def parseInvestigationFile ():
-	if os.path.isfile('informace.old.txt'):
-		with open('informace.old.txt', 'r') as backup:
+	if os.path.isfile(files['investigationBackup']):
+		with open(files['investigationBackup'], 'r') as backup:
 			if (player['remaining'] >= int(next(backup))):
 				return getInvestigationFileContents(backup)
 	return {}
 
 def checkInvestigationFile ():
-	if os.path.isfile('informace.txt'):
-		with open('informace.txt', 'r') as source:
+	if os.path.isfile(files['investigation']):
+		with open(files['investigation'], 'r') as source:
 			return bool(list(source))
 	return False
 
@@ -119,24 +139,47 @@ def getInvestigationFileContents (source):
 
 def backupInvestigationFile ():
 	if checkInvestigationFile():
-		with open('informace.txt', 'r') as source:
-			with open('informace.old.txt', 'w') as destination:
+		with open(files['investigation'], 'r') as source:
+			with open(files['investigationBackup'], 'w') as destination:
 				destination.write('{0}\n'.format(player['remaining'] - 15))
 				destination.write(source.read())
 
 #uloží toto a poslední kolo
 def nextRound (action):
-	with open('history.txt', 'a') as history:
+	with open(files['history'], 'a') as history:
 		history.write(action + '\n')
-	print(action)
+	sys.stdout.write(action)
 	sys.exit(0)
 
 #vrací poslední dvě kola
 def getHistory ():
-	if os.path.isfile('history.txt'):
-		with open('history.txt') as source:
-			return [line for line in source if line != '\n']
+	if os.path.isfile(files['history']):
+		with open(files['history']) as source:
+			return [line.strip() for line in source if line != '\n']
 	return []
+
+def findPastAction (action, offset = 0):
+	history = getHistory()
+	if not offset:
+		offset = len(history)
+	
+	history = history[-offset : ]
+	pivot = action[0]
+	i = -1
+	
+	for item in history:
+		i += 1
+		if item.startswith(pivot):
+			j = i
+			found = True
+			for nextAction in action[1 : ]:
+				j += 1
+				if not history[j].startswith(nextAction):
+					found = False
+					break
+			if found:
+				return True
+	return False
 
 def lastRound (offset = 1):
 	data = getHistory()
@@ -148,37 +191,32 @@ player['remaining'], player['land'], player['soldiers'], player['farmers'], play
 
 #TODO: odlišit chování pro majoritní území (neútočit) a posledních cca 5 kol (útoky)
 
-defReport = readFile('obrana.txt')
-attReport = readFile('utok.txt')
+defenseReport = readFile(files['defenseReport'])
+attackReport = readFile(files['attackReport'])
 
 backupInvestigationFile()
 
-if getFoodTimeout() < 3: 				#pokud mám jídlo na míň jak 3 kola, sklízim
-	if lastRound() == 's':
+if isHungry(): 				#pokud mám jídlo na míň jak 3 kola, sklízim
+	if lastRound() == actions['harvest']:
 		increaseProduction()
 	harvest()
 
-if attReport:							#pokud jsem někoho dobyl a mám pár vojáků, útočim na něj znova
-	if (int(attReport['zisk_ja_uzemi']) > 0 and player['soldiers'] > 2):
-		attack(attReport['cil'])
+if attackReport:							#pokud jsem někoho dobyl a mám pár vojáků, útočim na něj znova
+	if (int(attackReport['zisk_ja_uzemi']) > 0 and player['soldiers'] > 2):
+		attack(attackReport['cil'])
 
-if defReport:						#pokud mě někdo napadl a neprošel a mám pár vojáků, útočim na něj zpátky
-	if (int(defReport['ztraty_ja_uzemi']) == 0 and player['soldiers'] > 2):
-		attack(defReport['utocnici'].split(',').pop())
+if defenseReport:						#pokud mě někdo napadl a neprošel a mám pár vojáků, útočim na něj zpátky
+	if (int(defenseReport['ztraty_ja_uzemi']) == 0 and player['soldiers'] > 2):
+		attack(defenseReport['utocnici'].split(',').pop().strip())
 
-if (lastRound(1) == 'i'):				#pokud jsem minule špionoval
-	if (lastRound(2) == 'i'):#a předminule taky
-		try:
-			optimalAttack()
-		except NoReportError:
-			upgradeSpy()
-		except NoTargetError:
-			increaseArmyPower()
-	else:								#když předminule ne, tak znova špionuju
-		investigate()
+if getAttackPower(player['soldiers'], player['armyLevel']) < 15:
+	increaseArmyPower()
 
-if (player['soldiers'] / 3 > player['spyLevel'] + 1): #pokud mám míň jak agenta na 3 vojáky, upgrade špionů
-	upgradeSpy()
+if not findPastAction(actions['attack'], 10):
+	attack(selectRandomTarget())
+
+#if (player['soldiers'] / 3 > player['spyLevel'] + 1): #pokud mám míň jak agenta na 3 vojáky, upgrade špionů
+	#upgradeSpy()
 
 if (getProduction() < 6): 			#při malé produkci ji zvyšuju 
 	increaseProduction()
