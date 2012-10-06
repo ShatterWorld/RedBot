@@ -10,8 +10,6 @@ player['remaining'], player['land'], player['soldiers'], player['farmers'], play
 defenseReport = readFile(files['defenseReport'])
 attackReport = readFile(files['attackReport'])
 
-backupInvestigationFile()
-
 if getFoodTimeout() <= 1:
 	harvest()
 elif attackReport and int(attackReport['zisk_ja_uzemi']) > 0 and player['soldiers'] > 2:
