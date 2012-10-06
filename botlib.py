@@ -84,7 +84,7 @@ def increaseProduction ():
 def nextRound (action, *args):
 	with open(files['history'], 'a') as history:
 		history.write(action + '\n')
-	sys.stdout.write(action + str().join(map(lambda x: ' ' + x, args)))
+	sys.stdout.write(actions[action] + str().join(map(lambda x: ' ' + str(x), args)))
 	sys.exit(0)
 
 #vrací poslední dvě kola
@@ -121,10 +121,12 @@ def lastRound (offset = 1):
 	data = getHistory()
 	return data[-offset] if offset < len(data) else 'x'
 
-
 def readFile (filename):
 	try:
 		with open(filename, 'r') as source:
 			return dict([tuple(map(lambda x: x.strip(), line.split('='))) for line in source if '=' in line])
 	except IOError:
 		return {}
+
+def setPlayer (player):
+	globals()['player'] = player
