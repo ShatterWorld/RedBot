@@ -1,12 +1,7 @@
 #!/usr/bin/python3
-import sys
-import botlib
 from botlib import *
 
-player = {}
-player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
-
-setPlayer(player)
+player = createPlayer()
 
 #TODO: odlišit chování pro majoritní území (neútočit) a posledních cca 5 kol (útoky)
 

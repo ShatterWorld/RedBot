@@ -128,5 +128,7 @@ def readFile (filename):
 	except IOError:
 		return {}
 
-def setPlayer (player):
+def createPlayer ():
+	player = {}
+	player['remaining'], player['land'], player['soldiers'], player['farmers'], player['armyLevel'], player['farmLevel'], player['food'], player['spyLevel'] = map(int, sys.argv[1:])
 	globals()['player'] = player
